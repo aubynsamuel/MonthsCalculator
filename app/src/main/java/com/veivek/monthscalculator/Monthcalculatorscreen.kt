@@ -20,6 +20,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.adaptive.layout.AnimatedPane
+import androidx.compose.material3.adaptive.layout.SupportingPaneScaffold
+import androidx.compose.material3.adaptive.navigation.rememberSupportingPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,13 +35,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.window.core.layout.WindowWidthSizeClass
 import com.veivek.monthscalculator.components.DateCard
 import com.veivek.monthscalculator.components.MonthYearPicker
 import com.veivek.monthscalculator.components.ResultCard
 import com.veivek.monthscalculator.utils.calculateMonthsBetween
 import java.time.YearMonth
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun MonthCalculatorScreen() {
     var startDate by remember { mutableStateOf(YearMonth.now()) }
@@ -45,6 +51,13 @@ fun MonthCalculatorScreen() {
     var showEndPicker by remember { mutableStateOf(false) }
 
     val monthsBetween = remember(startDate, endDate) { calculateMonthsBetween(startDate, endDate) }
+
+    // Adaptive Info
+    val adaptiveInfo = currentWindowAdaptiveInfo()
+    val isExpanded =
+        adaptiveInfo.windowSizeClass.windowWidthSizeClass != WindowWidthSizeClass.COMPACT
+
+    val scaffoldNavigator = rememberSupportingPaneScaffoldNavigator()
 
     Scaffold(
         topBar = {
@@ -57,61 +70,28 @@ fun MonthCalculatorScreen() {
                 .padding(paddingValues)
                 .fillMaxSize()
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                // Title
-                Text(
-                    text = "Month Calculator",
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    letterSpacing = 1.5.sp
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Calculate months between dates",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                    letterSpacing = 0.5.sp
-                )
-
-                Spacer(modifier = Modifier.height(48.dp))
-
-                // Start Date Card
-                DateCard(
-                    label = "START DATE",
-                    date = startDate,
-                    onClick = { showStartPicker = true }
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // End Date Card
-                DateCard(
-                    label = "END DATE",
-                    date = endDate,
-                    onClick = { showEndPicker = true }
-                )
-
-                Spacer(modifier = Modifier.height(40.dp))
-
-                // Result Display
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(animationSpec = tween(800)) +
-                            expandVertically(animationSpec = spring(stiffness = Spring.StiffnessLow))
-                ) {
-                    ResultCard(monthsBetween)
-                }
-            }
+            SupportingPaneScaffold(
+                directive = scaffoldNavigator.scaffoldDirective,
+                value = scaffoldNavigator.scaffoldValue,
+                mainPane = {
+                    AnimatedPane {
+                        MainContent(
+                            startDate = startDate,
+                            endDate = endDate,
+                            onStartPickerClick = { showStartPicker = true },
+                            onEndPickerClick = { showEndPicker = true },
+                            isExpanded = isExpanded,
+                            monthsBetween = monthsBetween // Pass for compact mode only
+                        )
+                    }
+                },
+                supportingPane = {
+                    AnimatedPane {
+                        ResultPane(monthsBetween)
+                    }
+                },
+                modifier = Modifier.fillMaxSize()
+            )
 
             // Date Pickers
             if (showStartPicker) {
@@ -136,5 +116,84 @@ fun MonthCalculatorScreen() {
                 )
             }
         }
+    }
+}
+
+@Composable
+fun MainContent(
+    startDate: YearMonth,
+    endDate: YearMonth,
+    onStartPickerClick: () -> Unit,
+    onEndPickerClick: () -> Unit,
+    isExpanded: Boolean,
+    monthsBetween: Int,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // Title
+        Text(
+            text = "Month Calculator",
+            fontSize = if (isExpanded) 48.sp else 36.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            letterSpacing = 1.5.sp
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Calculate months between dates",
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+            letterSpacing = 0.5.sp
+        )
+
+        Spacer(modifier = Modifier.height(48.dp))
+
+        // Start Date Card
+        DateCard(
+            label = "START DATE",
+            date = startDate,
+            onClick = onStartPickerClick
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // End Date Card
+        DateCard(
+            label = "END DATE",
+            date = endDate,
+            onClick = onEndPickerClick
+        )
+
+        // Only show ResultCard here in Compact mode
+        if (!isExpanded) {
+            Spacer(modifier = Modifier.height(40.dp))
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(animationSpec = tween(800)) +
+                        expandVertically(animationSpec = spring(stiffness = Spring.StiffnessLow))
+            ) {
+                ResultCard(monthsBetween)
+            }
+        }
+    }
+}
+
+@Composable
+fun ResultPane(monthsBetween: Int) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        ResultCard(monthsBetween)
     }
 }
