@@ -42,8 +42,7 @@ fun MonthCalculatorScreen() {
     var showStartPicker by remember { mutableStateOf(false) }
     var showEndPicker by remember { mutableStateOf(false) }
 
-    val monthsBetween = calculateMonthsBetween(startDate, endDate)
-
+    val monthsBetween = remember(startDate, endDate) { calculateMonthsBetween(startDate, endDate) }
 
     Scaffold(
         topBar = {
