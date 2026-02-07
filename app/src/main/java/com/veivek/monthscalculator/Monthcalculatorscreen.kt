@@ -59,17 +59,13 @@ fun MonthCalculatorScreen() {
 
     val scaffoldNavigator = rememberSupportingPaneScaffoldNavigator()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Months Calculator") })
-        },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
-        ) {
+    Box {
+        Scaffold(
+            topBar = {
+                TopAppBar(title = { Text("Months Calculator") })
+            },
+            containerColor = MaterialTheme.colorScheme.background
+        ) { paddingValues ->
             SupportingPaneScaffold(
                 directive = scaffoldNavigator.scaffoldDirective,
                 value = scaffoldNavigator.scaffoldValue,
@@ -90,31 +86,33 @@ fun MonthCalculatorScreen() {
                         ResultPane(monthsBetween)
                     }
                 },
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
             )
+        }
 
-            // Date Pickers
-            if (showStartPicker) {
-                MonthYearPicker(
-                    currentDate = startDate,
-                    onDateSelected = {
-                        startDate = it
-                        showStartPicker = false
-                    },
-                    onDismiss = { showStartPicker = false }
-                )
-            }
+        // Date Pickers
+        if (showStartPicker) {
+            MonthYearPicker(
+                currentDate = startDate,
+                onDateSelected = {
+                    startDate = it
+                    showStartPicker = false
+                },
+                onDismiss = { showStartPicker = false }
+            )
+        }
 
-            if (showEndPicker) {
-                MonthYearPicker(
-                    currentDate = endDate,
-                    onDateSelected = {
-                        endDate = it
-                        showEndPicker = false
-                    },
-                    onDismiss = { showEndPicker = false }
-                )
-            }
+        if (showEndPicker) {
+            MonthYearPicker(
+                currentDate = endDate,
+                onDateSelected = {
+                    endDate = it
+                    showEndPicker = false
+                },
+                onDismiss = { showEndPicker = false }
+            )
         }
     }
 }
