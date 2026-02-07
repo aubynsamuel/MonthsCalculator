@@ -136,25 +136,28 @@ fun MainContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Title
-        Text(
-            text = "Month Calculator",
-            fontSize = if (isExpanded) 48.sp else 36.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            letterSpacing = 1.5.sp
-        )
+        // Only show title in compact mode to save space in landscape
+        if (!isExpanded) {
+            // Title
+            Text(
+                text = "Month Calculator",
+                fontSize = 36.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                letterSpacing = 1.5.sp
+            )
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-        Text(
-            text = "Calculate months between dates",
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-            letterSpacing = 0.5.sp
-        )
+            Text(
+                text = "Calculate months between dates",
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                letterSpacing = 0.5.sp
+            )
 
-        Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(48.dp))
+        }
 
         // Start Date Card
         DateCard(
