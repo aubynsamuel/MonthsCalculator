@@ -1,0 +1,76 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/apk/res-auto"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+    <!-- Background Layer: Elegant Gradient Squircle -->
+    <path
+        android:fillColor="#6650a4"
+        android:pathData="M128,64 L384,64 C419.35,64 448,92.65 448,128 L448,384 C448,419.35 419.35,448 384,448 L128,448 C92.65,448 64,419.35 64,384 L64,128 C64,92.65 92.65,64 128,64 Z" />
+
+    <!-- Accent Gradient Overlay (Subtle) -->
+    <path android:pathData="M128,64 L384,64 C419.35,64 448,92.65 448,128 L448,384 C448,419.35 419.35,448 384,448 L128,448 C92.65,448 64,419.35 64,384 L64,128 C64,92.65 92.65,64 128,64 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:endX="448"
+                android:endY="448"
+                android:startX="64"
+                android:startY="64"
+                android:type="linear">
+                <item
+                    android:color="#33FFFFFF"
+                    android:offset="0" />
+                <item
+                    android:color="#00FFFFFF"
+                    android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Calendar Outline (Time/Months) -->
+    <path
+        android:pathData="M160,160 L352,160 L352,352 L160,352 Z"
+        android:strokeWidth="12"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+
+    <!-- Top Bar of Calendar -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M160,160 L352,160 L352,200 L160,200 Z" />
+
+    <!-- Calendar Grid Dots -->
+    <path
+        android:pathData="M190,230 L210,230 M245,230 L265,230 M300,230 L320,230 M190,265 L210,265 M245,265 L265,265 M300,265 L320,265 M190,300 L210,300 M245,300 L265,300"
+        android:strokeWidth="8"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round" />
+
+    <!-- Calculator Icon Symbol (Bottom Right Offset) -->
+    <group
+        android:translateX="300"
+        android:translateY="300">
+        <!-- Calculator Circle Base -->
+        <path
+            android:fillColor="#7D5260"
+            android:pathData="M0,0 m-60,0 a60,60 0 1,1 120,0 a60,60 0 1,1 -120,0"
+            android:strokeWidth="6"
+            android:strokeColor="#FFFFFF" />
+
+        <!-- Plus/Minus/Equals Symbol -->
+        <path
+            android:pathData="M-20,-10 L20,-10 M-20,10 L20,10"
+            android:strokeWidth="8"
+            android:strokeColor="#FFFFFF"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M0,-30 L0,30"
+            android:strokeWidth="8"
+            android:strokeColor="#FFFFFF"
+            android:strokeLineCap="round" />
+    </group>
+
+</vector>

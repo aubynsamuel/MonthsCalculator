@@ -11,12 +11,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -33,24 +38,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.window.core.layout.WindowWidthSizeClass
-import com.veivek.monthscalculator.components.DateCard
-import com.veivek.monthscalculator.components.MonthYearPicker
-import com.veivek.monthscalculator.components.ResultCard
-import com.veivek.monthscalculator.utils.calculateMonthsBetween
-import java.time.YearMonth
+import com.veivek.monthscalculator.components.PensionResultCard
+import com.veivek.monthscalculator.utils.PensionResult
+import com.veivek.monthscalculator.utils.calculatePension
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
-fun MonthCalculatorScreen() {
-    var startDate by remember { mutableStateOf(YearMonth.now()) }
-    var endDate by remember { mutableStateOf(YearMonth.now()) }
-    var showStartPicker by remember { mutableStateOf(false) }
-    var showEndPicker by remember { mutableStateOf(false) }
+fun PensionCalculatorScreen() {
+    var salaryInput by remember { mutableStateOf("") }
+    var monthsInput by remember { mutableStateOf("") }
 
-    val monthsBetween = remember(startDate, endDate) { calculateMonthsBetween(startDate, endDate) }
+    val salary = salaryInput.toDoubleOrNull() ?: 0.0
+    val months = monthsInput.toIntOrNull() ?: 0
+
+    val pensionResult = remember(salary, months) { calculatePension(salary, months) }
 
     // Adaptive Info
     val adaptiveInfo = currentWindowAdaptiveInfo()
@@ -62,7 +67,7 @@ fun MonthCalculatorScreen() {
     Box {
         Scaffold(
             topBar = {
-                TopAppBar(title = { Text("Months Calculator") })
+                TopAppBar(title = { Text("Pension Calculator") })
             },
             containerColor = MaterialTheme.colorScheme.background
         ) { paddingValues ->
@@ -71,74 +76,52 @@ fun MonthCalculatorScreen() {
                 value = scaffoldNavigator.scaffoldValue,
                 mainPane = {
                     AnimatedPane {
-                        MainContent(
-                            startDate = startDate,
-                            endDate = endDate,
-                            onStartPickerClick = { showStartPicker = true },
-                            onEndPickerClick = { showEndPicker = true },
+                        PensionMainContent(
+                            salaryInput = salaryInput,
+                            onSalaryChange = { salaryInput = it },
+                            monthsInput = monthsInput,
+                            onMonthsChange = { monthsInput = it },
                             isExpanded = isExpanded,
-                            monthsBetween = monthsBetween // Pass for compact mode only
+                            showResult = monthsInput.isNotEmpty() && salaryInput.isNotEmpty(),
+                            pensionResult = pensionResult
                         )
                     }
                 },
                 supportingPane = {
                     AnimatedPane {
-                        ResultPane(monthsBetween)
+                        PensionResultPane(pensionResult)
                     }
                 },
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
-            )
-        }
-
-        // Date Pickers
-        if (showStartPicker) {
-            MonthYearPicker(
-                currentDate = startDate,
-                onDateSelected = {
-                    startDate = it
-                    showStartPicker = false
-                },
-                onDismiss = { showStartPicker = false }
-            )
-        }
-
-        if (showEndPicker) {
-            MonthYearPicker(
-                currentDate = endDate,
-                onDateSelected = {
-                    endDate = it
-                    showEndPicker = false
-                },
-                onDismiss = { showEndPicker = false }
+                    .padding(paddingValues)
             )
         }
     }
 }
 
 @Composable
-fun MainContent(
-    startDate: YearMonth,
-    endDate: YearMonth,
-    onStartPickerClick: () -> Unit,
-    onEndPickerClick: () -> Unit,
+fun PensionMainContent(
+    salaryInput: String,
+    onSalaryChange: (String) -> Unit,
+    monthsInput: String,
+    onMonthsChange: (String) -> Unit,
     isExpanded: Boolean,
-    monthsBetween: Int,
+    showResult: Boolean,
+    pensionResult: PensionResult,
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(24.dp),
+            .padding(24.dp)
+            .imePadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Only show title in compact mode to save space in landscape
         if (!isExpanded) {
-            // Title
             Text(
-                text = "Month Calculator",
+                text = "Pension Calculator",
                 fontSize = 36.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
@@ -148,7 +131,7 @@ fun MainContent(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Calculate months between dates",
+                text = "Estimate your SSNIT pension",
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                 letterSpacing = 0.5.sp
@@ -157,44 +140,48 @@ fun MainContent(
             Spacer(modifier = Modifier.height(48.dp))
         }
 
-        // Start Date Card
-        DateCard(
-            label = "START DATE",
-            date = startDate,
-            onClick = onStartPickerClick
+        OutlinedTextField(
+            value = salaryInput,
+            onValueChange = onSalaryChange,
+            label = { Text("Average of Best 3 Years Salary (Annual)") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            prefix = { Text("GHS ") },
+            shape = RoundedCornerShape(20.dp)
         )
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // End Date Card
-        DateCard(
-            label = "END DATE",
-            date = endDate,
-            onClick = onEndPickerClick
+        OutlinedTextField(
+            value = monthsInput,
+            onValueChange = onMonthsChange,
+            label = { Text("Total Months Contributed") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            shape = RoundedCornerShape(20.dp)
         )
 
-        // Only show ResultCard here in Compact mode
-        if (!isExpanded) {
+        if (!isExpanded && showResult) {
             Spacer(modifier = Modifier.height(40.dp))
             AnimatedVisibility(
                 visible = true,
                 enter = fadeIn(animationSpec = tween(800)) +
                         expandVertically(animationSpec = spring(stiffness = Spring.StiffnessLow))
             ) {
-                ResultCard(monthsBetween)
+                PensionResultCard(pensionResult)
             }
         }
     }
 }
 
 @Composable
-fun ResultPane(monthsBetween: Int) {
+fun PensionResultPane(result: com.veivek.monthscalculator.utils.PensionResult) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp),
         contentAlignment = Alignment.Center
     ) {
-        ResultCard(monthsBetween)
+        PensionResultCard(result)
     }
 }
